@@ -1,0 +1,75 @@
+<html> 
+<head> 
+<script src="http://openlayers.org/api/OpenLayers.js"></script>
+<style type="text/css">
+	html { height: 100% }
+ 	body { height: 100%; margin: 0px; padding: 0px }
+	#map_canvas { height: 100% }
+</style>
+<script>
+var map;
+
+// Avoid pink error tiles
+OpenLayers.IMAGE_RELOAD_ATTEMPTS = 5;
+OpenLayers.Util.onImageLoadErrorColor = "transparent";
+
+  function initialize() {
+     map = new OpenLayers.Map("map_canvas");
+     var mapbase = new OpenLayers.Layer.WMS('OpenLayers WMS', 
+       'http://vmap0.tiles.osgeo.org/wms/vmap0', 
+       { layers: 'basic,coastline_01,depthcontour,priroad,secroad,clabel'});
+
+     var nexrad = new OpenLayers.Layer.WMS("Nexrad",
+       "http://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r-t.cgi?",
+       {   layers:"nexrad-n0r-wmst",Time: '2011-12-25T09:45:00Z', 
+           transparent:true
+        }, {isBaseLayer: false, opacity:.5});
+
+     var kmlLayer = new OpenLayers.Layer.Vector("KML", {
+            strategies: [new OpenLayers.Strategy.Fixed()],
+            protocol: new OpenLayers.Protocol.HTTP({
+                url: "monte-sano-state-park.kml",
+                format: new OpenLayers.Format.KML({
+                    extractStyles: true, 
+                    extractAttributes: true,
+                    maxDepth: 2
+                })
+            })
+        })
+
+     map.addLayers([nexrad, mapbase]);
+     map.addLayer(kmlLayer);
+
+
+
+     var styleMapBlue = new OpenLayers.StyleMap(
+		{pointRadius: 15,
+
+                 externalGraphic: 'blue-circle.png'
+
+            	});                                                    
+
+     var bluelayer = new OpenLayers.Layer.Vector('blue', 
+
+             	{
+
+               	  styleMap: styleMapBlue 
+
+           	});
+     var point = new OpenLayers.Geometry.Point(-86.57, 34.65);
+     var marker = new OpenLayers.Feature.Vector(point);
+
+     marker.attributes.name = "Center of our map";
+
+     marker.attributes.description = "This is the center of our map!";
+     bluelayer.addFeatures([marker]);
+     map.addLayer(bluelayer);
+
+     map.setCenter(new OpenLayers.LonLat(-86.57, 34.65), 12); 
+ }
+</script>
+</head>
+<body onload="initialize()">
+<div id="map_canvas"></div>
+</body>
+</html>
